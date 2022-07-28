@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import BookList from "./components/BookList";
 import { nanoid } from "nanoid";
+import db from "./firebase";
+import { onSnapshot, collection } from "firebase/firestore";
 
 export default function App() {
-  const [books, setBooks] = useState(
-    JSON.parse(localStorage.getItem("books")) || []
-  );
+  const [books, setBooks] = useState([{ title: "loading..." }]);
+  // const [books, setBooks] = useState(
+  //   JSON.parse(localStorage.getItem("books")) || []
+  // );
   const [newBook, setNewBook] = useState({
     title: "",
     author: "",
@@ -13,9 +16,18 @@ export default function App() {
   });
   const [repeatNotice, setRepeatNotice] = useState(false);
 
-  useEffect(() => {
-    localStorage.setItem("books", JSON.stringify(books));
-  }, [books]);
+  // useEffect(() => {
+  //   localStorage.setItem("books", JSON.stringify(books));
+  // }, [books]);
+  console.log(books);
+
+  useEffect(
+    () =>
+      onSnapshot(collection(db, "books"), (snapshot) =>
+        setBooks(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
+      ),
+    []
+  );
 
   const handleChange = (e) => {
     const { name, value } = e.target;
