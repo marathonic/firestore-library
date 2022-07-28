@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import BookList from "./components/BookList";
 import { nanoid } from "nanoid";
 import db from "./firebase";
-import { onSnapshot, collection } from "firebase/firestore";
+import { onSnapshot, collection, addDoc } from "firebase/firestore";
 
 export default function App() {
   const [books, setBooks] = useState([{ title: "loading..." }]);
@@ -58,14 +58,24 @@ export default function App() {
     });
   };
 
-  const handleSubmit = (e) => {
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   updateBooks();
+  //   setNewBook({
+  //     title: "",
+  //     author: "",
+  //     id: "",
+  //   });
+  // };
+
+  // making async API calls calls for an async function. Do we make handleSubmit or updateBooks async?
+  // thoughts: if we don't make handleSubmit async, will everything after the function which gets our new books, updateBooks, run before it finishes?
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    updateBooks();
-    setNewBook({
-      title: "",
-      author: "",
-      id: "",
-    });
+    const collectionRef = collection(db, "books");
+    const payload = newBook;
+    await addDoc(collectionRef, payload);
   };
 
   return (
