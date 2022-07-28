@@ -2,7 +2,15 @@ import { useEffect, useState } from "react";
 import BookList from "./components/BookList";
 import { nanoid } from "nanoid";
 import db from "./firebase";
-import { onSnapshot, collection, addDoc } from "firebase/firestore";
+import {
+  onSnapshot,
+  collection,
+  addDoc,
+  setDoc,
+  doc,
+  deleteDoc,
+} from "firebase/firestore";
+import { async } from "@firebase/util";
 
 export default function App() {
   const [books, setBooks] = useState([{ title: "loading..." }]);
@@ -12,14 +20,13 @@ export default function App() {
   const [newBook, setNewBook] = useState({
     title: "",
     author: "",
-    id: "",
+    // id: "", <--- do we want an id here? I think so, let's see
   });
   const [repeatNotice, setRepeatNotice] = useState(false);
 
   // useEffect(() => {
   //   localStorage.setItem("books", JSON.stringify(books));
   // }, [books]);
-  console.log(books);
 
   useEffect(
     () =>
@@ -34,7 +41,7 @@ export default function App() {
     setNewBook({
       ...newBook,
       [name]: value,
-      id: nanoid(),
+      // id: nanoid(),
     });
   };
 
@@ -51,11 +58,8 @@ export default function App() {
     });
   };
 
-  const deleteBook = (bookId) => {
-    setBooks((prevBooks) => {
-      const filtered = prevBooks.filter((book) => book.id !== bookId);
-      return filtered;
-    });
+  const deleteBook = async (id) => {
+    deleteDoc(doc(db, "books", id));
   };
 
   // const handleSubmit = (e) => {
@@ -72,10 +76,22 @@ export default function App() {
   // thoughts: if we don't make handleSubmit async, will everything after the function which gets our new books, updateBooks, run before it finishes?
 
   const handleSubmit = async (e) => {
+    // handleNew in mentor's yt video
     e.preventDefault();
     const collectionRef = collection(db, "books");
     const payload = newBook;
-    await addDoc(collectionRef, payload);
+    // same thing as: const payload = { title: newBook.title, author: newBook.author };
+    // We may be able to show message here, but how? below doesn't work
+    // setRepeatNotice(false);
+    // const isRepeated = (payload) => books.includes(payload);
+    // if (books.some(isRepeated)) {
+    //   setRepeatNotice(true);
+    //   return;
+    // }
+    const docRef = await addDoc(collectionRef, payload);
+    // setNewBook({ ...newBook, id: docRef.id }); //<--- will this work?
+    // ^^^you don't need the id as property inside each object, firestore is tagging them at creation!
+    console.log(docRef.id);
   };
 
   return (
